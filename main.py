@@ -58,8 +58,19 @@ def setup_logging(*args, **kwargs):
     return _setup_logging(*args, **kwargs)
 
 
+_env_bootstrapped = False
+
+
 def _bootstrap_environment() -> None:
-    """Load .env and apply optional local proxy settings."""
+    """Load .env and apply optional local proxy settings.
+
+    Guarded to be idempotent so it can safely be called from both ``main()``
+    and from lazy-import paths used by API / bot consumers.
+    """
+    global _env_bootstrapped
+    if _env_bootstrapped:
+        return
+
     from src.config import setup_env
 
     setup_env()
@@ -74,6 +85,8 @@ def _bootstrap_environment() -> None:
         os.environ["http_proxy"] = proxy_url
         os.environ["https_proxy"] = proxy_url
 
+    _env_bootstrapped = True
+
 
 def _setup_bootstrap_logging(debug: bool = False) -> None:
     """Initialize default file logging before config or heavy imports."""
@@ -85,7 +98,12 @@ def _setup_bootstrap_logging(debug: bool = False) -> None:
 
 
 def _get_stock_analysis_pipeline():
-    """Lazily import StockAnalysisPipeline for external consumers."""
+    """Lazily import StockAnalysisPipeline for external consumers.
+
+    Also ensures env/proxy bootstrap has run so that API / bot consumers
+    that never call ``main()`` still get ``USE_PROXY`` applied.
+    """
+    _bootstrap_environment()
     from src.core.pipeline import StockAnalysisPipeline as _Pipeline
 
     return _Pipeline
@@ -395,9 +413,13 @@ def run_full_analysis(
 
     这是定时任务调用的主函数
     """
+    # Import pipeline modules outside the broad try/except so that import-time
+    # failures (missing dependency, syntax error) propagate to the caller and
+    # result in a non-zero exit code instead of being silently swallowed.
+    from src.core.market_review import run_market_review
+    from src.core.pipeline import StockAnalysisPipeline
+
     try:
-        from src.core.market_review import run_market_review
-        from src.core.pipeline import StockAnalysisPipeline
 
         # Issue #529: Hot-reload STOCK_LIST from .env on each scheduled run
         if stock_codes is None:
