@@ -1210,7 +1210,19 @@ class StockAnalysisPipeline:
         
         # === 批量预取实时行情（优化：避免每只股票都触发全量拉取）===
         # 只有股票数量 >= 5 时才进行预取，少量股票直接逐个查询更高效
-        if len(stock_codes) >= 5:
+        # Budget guard: skip realtime quote prefetch when soft-timeout budget
+        # is already within the grace window — the heavy network I/O would
+        # consume remaining wall-clock budget before stock tasks even start.
+        _quote_prefetch_ok = True
+        if soft_timeout_deadline is not None:
+            _quote_remaining = soft_timeout_deadline - time.monotonic()
+            if _quote_remaining <= soft_timeout_grace_seconds:
+                logger.warning(
+                    "软预算剩余不足（%.1f 秒），跳过实时行情批量预取",
+                    max(0.0, _quote_remaining),
+                )
+                _quote_prefetch_ok = False
+        if _quote_prefetch_ok and len(stock_codes) >= 5:
             prefetch_count = self.fetcher_manager.prefetch_realtime_quotes(stock_codes)
             if prefetch_count > 0:
                 logger.info(f"已启用批量预取架构：一次拉取全市场数据，{len(stock_codes)} 只股票共享缓存")

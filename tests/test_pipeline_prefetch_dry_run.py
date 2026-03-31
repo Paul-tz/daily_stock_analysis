@@ -72,8 +72,8 @@ class TestPipelinePrefetchBehavior(unittest.TestCase):
             ]
         )
 
-        # Extra monotonic value at index 0 for budget guard before prefetch
-        with patch("src.core.pipeline.time.monotonic", side_effect=[0.0, 0.0, 0.45, 0.45]):
+        # Extra monotonic values at start for budget guards before quote & name prefetch
+        with patch("src.core.pipeline.time.monotonic", side_effect=[0.0, 0.0, 0.0, 0.45, 0.45]):
             results = pipeline.run(
                 stock_codes=["000001", "000002", "000003"],
                 dry_run=False,
@@ -179,8 +179,8 @@ class TestPipelinePrefetchBehavior(unittest.TestCase):
         )
         pipeline._latest_run_notices = []
 
-        # Extra monotonic value at index 0 for budget guard before prefetch
-        with patch("src.core.pipeline.time.monotonic", side_effect=[0.0, 0.0, 0.45, 0.45]):
+        # Extra monotonic values at start for budget guards before quote & name prefetch
+        with patch("src.core.pipeline.time.monotonic", side_effect=[0.0, 0.0, 0.0, 0.45, 0.45]):
             pipeline.run(
                 stock_codes=["000001", "000002", "000003"],
                 dry_run=False,
