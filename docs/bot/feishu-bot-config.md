@@ -43,6 +43,7 @@ FEISHU_STREAM_ENABLED=true
 注意：
 - `FEISHU_APP_ID` / `FEISHU_APP_SECRET` 不会直接开启群 Webhook 推送
 - 只想收通知时，不要只填 App ID / Secret，必须优先配置 `FEISHU_WEBHOOK_URL`
+- 如果你做的是应用机器人 / Stream Bot，可直接看文末保留的原流程截图参考
 
 ## Webhook 推送的正确配置步骤
 
@@ -189,3 +190,31 @@ FEISHU_WEBHOOK_KEYWORD=股票日报
 3. 回到飞书机器人安全设置，确认是否启用了关键词或签名
 4. 若启用了，就补齐 `FEISHU_WEBHOOK_KEYWORD` / `FEISHU_WEBHOOK_SECRET`
 5. 最后再检查机器人是否在群里、是否有权限、是否命中 IP 白名单
+
+## 附：应用 / Stream Bot 原流程截图参考
+
+如果你不是单纯做群 Webhook 推送，而是要继续配置飞书应用、长连接机器人或云文档，可以参考下面这组原截图。
+
+### 1. 创建应用
+
+https://open.feishu.cn/document/develop-an-echo-bot/introduction
+
+![img_6.png](img_6.png)
+
+![img_8.png](img_8.png)
+
+### 2. 获取密钥
+
+![img_7.png](img_7.png)
+
+### 3. 发布应用
+
+![img_5.png](img_5.png)
+
+### 4. 在飞书中打开应用
+
+![img_9.png](img_9.png)
+
+### 5. 消息交互
+
+![img_10.png](img_10.png)
